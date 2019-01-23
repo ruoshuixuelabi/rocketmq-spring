@@ -15,20 +15,20 @@
  * limitations under the License.
  */
 
-package org.apache.rocketmq.samples.springboot.consumer;
+package org.apache.rocketmq.spring.autoconfigure;
 
-import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
-import org.apache.rocketmq.spring.core.RocketMQListener;
-import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-/**
- * RocketMQMessageListener
- */
-@Service
-@RocketMQMessageListener(topic = "${demo.rocketmq.topic}", consumerGroup = "string_consumer")
-public class StringConsumer implements RocketMQListener<String> {
-    @Override
-    public void onMessage(String message) {
-        System.out.printf("------- StringConsumer received: %s \n", message);
+@Configuration
+@ConditionalOnMissingBean(ObjectMapper.class)
+class JacksonFallbackConfiguration {
+
+    @Bean
+    public ObjectMapper rocketMQMessageObjectMapper() {
+        return new ObjectMapper();
     }
+
 }

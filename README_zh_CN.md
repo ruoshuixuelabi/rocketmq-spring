@@ -1,8 +1,10 @@
-# RocketMQ-Spring
+# RocketMQ-Spring  [![Build Status](https://travis-ci.org/apache/rocketmq-spring.svg?branch=master)](https://travis-ci.org/apache/rocketmq-spring)
+
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.rocketmq/rocketmq-spring-all/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg:org.apache.rocketmq)
+[![GitHub release](https://img.shields.io/badge/release-download-orange.svg)](https://github.com/apache/rocketmq-spring/releases)
+[![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 
 [English](./README.md)
-
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 
 帮助开发者在[Spring Boot](http://projects.spring.io/spring-boot/)中快速集成[RocketMQ](http://rocketmq.apache.org/)。支持Spring Message规范，方便开发者从其它MQ快速切换到RocketMQ。
 
@@ -30,7 +32,7 @@
 
 下面列出来了一些关键点，完整的示例请参考： [rocketmq-spring-boot-samples](rocketmq-spring-boot-samples)
 
-注意:当前的RELEASE.VERSION=2.0.0
+注意:当前的RELEASE.VERSION=2.0.1 
 
 ```xml
 <!--在pom.xml中添加依赖-->
@@ -45,8 +47,8 @@
 
 ```properties
 ## application.properties
-spring.rocketmq.nameServer=127.0.0.1:9876
-spring.rocketmq.producer.group=my-group
+rocketmq.name-server=127.0.0.1:9876
+rocketmq.producer.group=my-group
 ```
 
 > 注意:
@@ -125,12 +127,12 @@ public class ProducerApplication implements CommandLineRunner{
 > 更多发送相关配置
 >
 > ```properties
-> spring.rocketmq.producer.retryTimesWhenSendAsyncFailed=0
-> spring.rocketmq.producer.sendMessageTimeout=300000
-> spring.rocketmq.producer.compressMessageBodyOverHowmuch=4096
-> spring.rocketmq.producer.maxMessageSize=4194304
-> spring.rocketmq.producer.retryAnotherBrokerWhenNotStoreOk=false
-> spring.rocketmq.producer.retryTimesWhenSendFailed=2
+> rocketmq.producer.send-message-timeout=300000
+> rocketmq.producer.compress-message-body-threshold=4096
+> rocketmq.producer.max-message-size=4194304
+> rocketmq.producer.retry-times-when-send-async-failed=0
+> rocketmq.producer.retry-next-server=true
+> rocketmq.producer.retry-times-when-send-failed=2
 > ```
 
 
@@ -138,7 +140,7 @@ public class ProducerApplication implements CommandLineRunner{
 
 ```properties
 ## application.properties
-spring.rocketmq.nameServer=127.0.0.1:9876
+rocketmq.name-server=127.0.0.1:9876
 ```
 
 > 注意:
@@ -183,7 +185,7 @@ public class ConsumerApplication{
 
 1. 生产环境有多个`nameserver`该如何连接？
 
-   `spring.rocketmq.nameServer`支持配置多个`nameserver`地址，采用`;`分隔即可。例如：`172.19.0.1:9876;172.19.0.2:9876`
+   `rocketmq.name-server`支持配置多个`nameserver`地址，采用`;`分隔即可。例如：`172.19.0.1:9876;172.19.0.2:9876`
 
 1. `rocketMQTemplate`在什么时候被销毁？
 

@@ -1,8 +1,10 @@
-# RocketMQ-Spring
+# RocketMQ-Spring [![Build Status](https://travis-ci.org/apache/rocketmq-spring.svg?branch=master)](https://travis-ci.org/apache/rocketmq-spring)
+
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.rocketmq/rocketmq-spring-all/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg:org.apache.rocketmq)
+[![GitHub release](https://img.shields.io/badge/release-download-orange.svg)](https://github.com/apache/rocketmq-spring/releases)
+[![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 
 [中文](./README_zh_CN.md)
-
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 
 ## Introduction
 
@@ -39,7 +41,7 @@ We are always very happy to have contributions, whether for trivial cleanups or 
 
 Please see the complete sample [rocketmq-spring-boot-samples](rocketmq-spring-boot-samples)
 
-Note: Current RELEASE.VERSION=2.0.0
+Note: Current RELEASE.VERSION=2.0.1 
 
 ```xml
 <!--add dependency in pom.xml-->
@@ -54,8 +56,8 @@ Note: Current RELEASE.VERSION=2.0.0
 
 ```properties
 ## application.properties
-spring.rocketmq.nameServer=127.0.0.1:9876
-spring.rocketmq.producer.group=my-group
+rocketmq.name-server=127.0.0.1:9876
+rocketmq.producer.group=my-group
 ```
 
 > Note:
@@ -93,12 +95,12 @@ public class ProducerApplication implements CommandLineRunner{
 > More relevant configurations for producing:
 >
 > ```properties
-> spring.rocketmq.producer.retryTimesWhenSendAsyncFailed=0
-> spring.rocketmq.producer.sendMessageTimeout=300000
-> spring.rocketmq.producer.compressMessageBodyOverHowmuch=4096
-> spring.rocketmq.producer.maxMessageSize=4194304
-> spring.rocketmq.producer.retryAnotherBrokerWhenNotStoreOk=false
-> spring.rocketmq.producer.retryTimesWhenSendFailed=2
+> rocketmq.producer.send-message-timeout=300000
+> rocketmq.producer.compress-message-body-threshold=4096
+> rocketmq.producer.max-message-size=4194304
+> rocketmq.producer.retry-times-when-send-async-failed=0
+> rocketmq.producer.retry-next-server=true
+> rocketmq.producer.retry-times-when-send-failed=2
 > ```
 
 
@@ -147,7 +149,7 @@ public class ProducerApplication implements CommandLineRunner{
 
 ```properties
 ## application.properties
-spring.rocketmq.nameServer=127.0.0.1:9876
+rocketmq.name-server=127.0.0.1:9876
 ```
 
 > Note:
@@ -191,7 +193,7 @@ public class ConsumerApplication{
 
 1. How to connected many `nameserver` on production environment？
 
-    `spring.rocketmq.nameServer` support the configuration of multiple `nameserver`, separated by `;`. For example: `172.19.0.1: 9876; 172.19.0.2: 9876`
+    `rocketmq.name-server` support the configuration of multiple `nameserver`, separated by `;`. For example: `172.19.0.1: 9876; 172.19.0.2: 9876`
 
 1. When was `rocketMQTemplate` destroyed?
 

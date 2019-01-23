@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.rocketmq.spring.config;
+package org.apache.rocketmq.spring.autoconfigure;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.rocketmq.spring.annotation.ConsumeMode;
@@ -28,12 +28,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.SmartInitializingSingleton;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.support.BeanDefinitionValidationException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.env.StandardEnvironment;
 
@@ -42,8 +41,9 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 
+@Configuration
 public class ListenerContainerConfiguration implements ApplicationContextAware, SmartInitializingSingleton {
-    private final static Logger log = LoggerFactory.getLogger(RocketMQAutoConfiguration.class);
+    private final static Logger log = LoggerFactory.getLogger(ListenerContainerConfiguration.class);
 
     private ConfigurableApplicationContext applicationContext;
 
@@ -55,15 +55,10 @@ public class ListenerContainerConfiguration implements ApplicationContextAware, 
 
     private ObjectMapper objectMapper;
 
-    public ListenerContainerConfiguration() {
-    }
-
-    @Autowired
-    public ListenerContainerConfiguration(
-        @Qualifier("rocketMQMessageObjectMapper") ObjectMapper objectMapper,
+    public ListenerContainerConfiguration(ObjectMapper rocketMQMessageObjectMapper,
         StandardEnvironment environment,
         RocketMQProperties rocketMQProperties) {
-        this.objectMapper = objectMapper;
+        this.objectMapper = rocketMQMessageObjectMapper;
         this.environment = environment;
         this.rocketMQProperties = rocketMQProperties;
     }
@@ -127,7 +122,9 @@ public class ListenerContainerConfiguration implements ApplicationContextAware, 
 
     private void validate(RocketMQMessageListener annotation) {
         if (annotation.consumeMode() == ConsumeMode.ORDERLY &&
-            annotation.messageModel() == MessageModel.BROADCASTING)
-            throw new BeanDefinitionValidationException("Bad annotation definition in @RocketMQMessageListener, messageModel BROADCASTING does not support ORDERLY message!");
+            annotation.messageModel() == MessageModel.BROADCASTING) {
+            throw new BeanDefinitionValidationException(
+                "Bad annotation definition in @RocketMQMessageListener, messageModel BROADCASTING does not support ORDERLY message!");
+        }
     }
 }

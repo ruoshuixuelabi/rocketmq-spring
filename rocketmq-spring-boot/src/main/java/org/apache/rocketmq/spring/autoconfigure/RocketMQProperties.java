@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-package org.apache.rocketmq.spring.config;
+package org.apache.rocketmq.spring.autoconfigure;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @SuppressWarnings("WeakerAccess")
-@ConfigurationProperties(prefix = "spring.rocketmq")
+@ConfigurationProperties(prefix = "rocketmq")
 public class RocketMQProperties {
 
     /**
@@ -61,7 +61,7 @@ public class RocketMQProperties {
         /**
          * Compress message body threshold, namely, message body larger than 4k will be compressed on default.
          */
-        private int compressMessageBodyOverHowmuch = 1024 * 4;
+        private int compressMessageBodyThreshold = 1024 * 4;
 
         /**
          * Maximum number of retry to perform internally before claiming sending failure in synchronous mode.
@@ -78,7 +78,7 @@ public class RocketMQProperties {
         /**
          * Indicate whether to retry another broker on sending failure internally.
          */
-        private boolean retryAnotherBrokerWhenNotStoreOk = false;
+        private boolean retryNextServer = false;
 
         /**
          * Maximum allowed message size in bytes.
@@ -101,12 +101,12 @@ public class RocketMQProperties {
             this.sendMessageTimeout = sendMessageTimeout;
         }
 
-        public int getCompressMessageBodyOverHowmuch() {
-            return compressMessageBodyOverHowmuch;
+        public int getCompressMessageBodyThreshold() {
+            return compressMessageBodyThreshold;
         }
 
-        public void setCompressMessageBodyOverHowmuch(int compressMessageBodyOverHowmuch) {
-            this.compressMessageBodyOverHowmuch = compressMessageBodyOverHowmuch;
+        public void setCompressMessageBodyThreshold(int compressMessageBodyThreshold) {
+            this.compressMessageBodyThreshold = compressMessageBodyThreshold;
         }
 
         public int getRetryTimesWhenSendFailed() {
@@ -125,12 +125,12 @@ public class RocketMQProperties {
             this.retryTimesWhenSendAsyncFailed = retryTimesWhenSendAsyncFailed;
         }
 
-        public boolean isRetryAnotherBrokerWhenNotStoreOk() {
-            return retryAnotherBrokerWhenNotStoreOk;
+        public boolean isRetryNextServer() {
+            return retryNextServer;
         }
 
-        public void setRetryAnotherBrokerWhenNotStoreOk(boolean retryAnotherBrokerWhenNotStoreOk) {
-            this.retryAnotherBrokerWhenNotStoreOk = retryAnotherBrokerWhenNotStoreOk;
+        public void setRetryNextServer(boolean retryNextServer) {
+            this.retryNextServer = retryNextServer;
         }
 
         public int getMaxMessageSize() {
