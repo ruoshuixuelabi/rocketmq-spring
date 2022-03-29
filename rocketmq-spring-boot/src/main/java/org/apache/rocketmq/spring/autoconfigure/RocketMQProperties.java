@@ -17,7 +17,11 @@
 
 package org.apache.rocketmq.spring.autoconfigure;
 
+import org.apache.rocketmq.common.topic.TopicValidator;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("WeakerAccess")
 @ConfigurationProperties(prefix = "rocketmq")
@@ -28,7 +32,22 @@ public class RocketMQProperties {
      */
     private String nameServer;
 
+    /**
+     * Enum type for accessChannel, values: LOCAL, CLOUD
+     */
+    private String accessChannel;
+
     private Producer producer;
+
+    /**
+     * Configure enable listener or not.
+     * In some particular cases, if you don't want the the listener is enabled when container startup,
+     * the configuration pattern is like this :
+     * rocketmq.consumer.listeners.<group-name>.<topic-name>.enabled=<boolean value, true or false>
+     * <p>
+     * the listener is enabled by default.
+     */
+    private Consumer consumer = new Consumer();
 
     public String getNameServer() {
         return nameServer;
@@ -36,6 +55,14 @@ public class RocketMQProperties {
 
     public void setNameServer(String nameServer) {
         this.nameServer = nameServer;
+    }
+
+    public String getAccessChannel() {
+        return accessChannel;
+    }
+
+    public void setAccessChannel(String accessChannel) {
+        this.accessChannel = accessChannel;
     }
 
     public RocketMQProperties.Producer getProducer() {
@@ -49,9 +76,14 @@ public class RocketMQProperties {
     public static class Producer {
 
         /**
-         * Name of producer.
+         * Group name of producer.
          */
         private String group;
+
+        /**
+         * Namespace for this MQ Producer instance.
+         */
+        private String namespace;
 
         /**
          * Millis of send message timeout.
@@ -84,6 +116,31 @@ public class RocketMQProperties {
          * Maximum allowed message size in bytes.
          */
         private int maxMessageSize = 1024 * 1024 * 4;
+
+        /**
+         * The property of "access-key".
+         */
+        private String accessKey;
+
+        /**
+         * The property of "secret-key".
+         */
+        private String secretKey;
+
+        /**
+         * Switch flag instance for message trace.
+         */
+        private boolean enableMsgTrace = false;
+
+        /**
+         * The name value of message trace topic.If you don't config,you can use the default trace topic name.
+         */
+        private String customizedTraceTopic = TopicValidator.RMQ_SYS_TRACE_TOPIC;
+
+        /**
+         * The property of "tlsEnable".
+         */
+        private boolean tlsEnable = false;
 
         public String getGroup() {
             return group;
@@ -140,5 +197,238 @@ public class RocketMQProperties {
         public void setMaxMessageSize(int maxMessageSize) {
             this.maxMessageSize = maxMessageSize;
         }
+
+        public String getAccessKey() {
+            return accessKey;
+        }
+
+        public void setAccessKey(String accessKey) {
+            this.accessKey = accessKey;
+        }
+
+        public String getSecretKey() {
+            return secretKey;
+        }
+
+        public void setSecretKey(String secretKey) {
+            this.secretKey = secretKey;
+        }
+
+        public boolean isEnableMsgTrace() {
+            return enableMsgTrace;
+        }
+
+        public void setEnableMsgTrace(boolean enableMsgTrace) {
+            this.enableMsgTrace = enableMsgTrace;
+        }
+
+        public String getCustomizedTraceTopic() {
+            return customizedTraceTopic;
+        }
+
+        public void setCustomizedTraceTopic(String customizedTraceTopic) {
+            this.customizedTraceTopic = customizedTraceTopic;
+        }
+
+        public boolean isTlsEnable() {
+            return tlsEnable;
+        }
+
+        public void setTlsEnable(boolean tlsEnable) {
+            this.tlsEnable = tlsEnable;
+        }
+
+        public String getNamespace() {
+            return namespace;
+        }
+
+        public void setNamespace(String namespace) {
+            this.namespace = namespace;
+        }
     }
+
+    public Consumer getConsumer() {
+        return consumer;
+    }
+
+    public void setConsumer(Consumer consumer) {
+        this.consumer = consumer;
+    }
+
+    public static final class Consumer {
+        /**
+         * Group name of consumer.
+         */
+        private String group;
+
+        /**
+         * Namespace for this MQ Consumer instance.
+         */
+        private String namespace;
+
+        /**
+         * Topic name of consumer.
+         */
+        private String topic;
+
+        /**
+         * Control message mode, if you want all subscribers receive message all message, broadcasting is a good choice.
+         */
+        private String  messageModel = "CLUSTERING";
+
+        /**
+         * Control how to selector message.
+         *
+         */
+        private String selectorType = "TAG";
+
+        /**
+         * Control which message can be select.
+         */
+        private String selectorExpression = "*";
+
+        /**
+         * The property of "access-key".
+         */
+        private String accessKey;
+
+        /**
+         * The property of "secret-key".
+         */
+        private String secretKey;
+
+        /**
+         * Maximum number of messages pulled each time.
+         */
+        private int pullBatchSize = 10;
+
+        /**
+         * Switch flag instance for message trace.
+         */
+        private boolean enableMsgTrace = false;
+
+        /**
+         * The name value of message trace topic.If you don't config,you can use the default trace topic name.
+         */
+        private String customizedTraceTopic = TopicValidator.RMQ_SYS_TRACE_TOPIC;
+
+        /**
+         * listener configuration container
+         * the pattern is like this:
+         * group1.topic1 = false
+         * group2.topic2 = true
+         * group3.topic3 = false
+         */
+        private Map<String, Map<String, Boolean>> listeners = new HashMap<>();
+
+        /**
+         * The property of "tlsEnable".
+         */
+        private boolean tlsEnable = false;
+
+        public String getGroup() {
+            return group;
+        }
+
+        public void setGroup(String group) {
+            this.group = group;
+        }
+
+        public String getTopic() {
+            return topic;
+        }
+
+        public void setTopic(String topic) {
+            this.topic = topic;
+        }
+
+        public String getMessageModel() {
+            return messageModel;
+        }
+
+        public void setMessageModel(String messageModel) {
+            this.messageModel = messageModel;
+        }
+
+        public String getSelectorType() {
+            return selectorType;
+        }
+
+        public void setSelectorType(String selectorType) {
+            this.selectorType = selectorType;
+        }
+
+        public String getSelectorExpression() {
+            return selectorExpression;
+        }
+
+        public void setSelectorExpression(String selectorExpression) {
+            this.selectorExpression = selectorExpression;
+        }
+
+        public String getAccessKey() {
+            return accessKey;
+        }
+
+        public void setAccessKey(String accessKey) {
+            this.accessKey = accessKey;
+        }
+
+        public String getSecretKey() {
+            return secretKey;
+        }
+
+        public void setSecretKey(String secretKey) {
+            this.secretKey = secretKey;
+        }
+
+        public int getPullBatchSize() {
+            return pullBatchSize;
+        }
+
+        public void setPullBatchSize(int pullBatchSize) {
+            this.pullBatchSize = pullBatchSize;
+        }
+
+        public Map<String, Map<String, Boolean>> getListeners() {
+            return listeners;
+        }
+
+        public void setListeners(Map<String, Map<String, Boolean>> listeners) {
+            this.listeners = listeners;
+        }
+
+        public boolean isEnableMsgTrace() {
+            return enableMsgTrace;
+        }
+
+        public void setEnableMsgTrace(boolean enableMsgTrace) {
+            this.enableMsgTrace = enableMsgTrace;
+        }
+
+        public String getCustomizedTraceTopic() {
+            return customizedTraceTopic;
+        }
+
+        public void setCustomizedTraceTopic(String customizedTraceTopic) {
+            this.customizedTraceTopic = customizedTraceTopic;
+        }
+
+        public boolean isTlsEnable() {
+            return tlsEnable;
+        }
+
+        public void setTlsEnable(boolean tlsEnable) {
+            this.tlsEnable = tlsEnable;
+        }
+
+        public String getNamespace() {
+            return namespace;
+        }
+
+        public void setNamespace(String namespace) {
+            this.namespace = namespace;
+        }
+    }
+
 }

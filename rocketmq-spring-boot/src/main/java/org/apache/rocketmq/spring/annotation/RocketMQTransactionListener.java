@@ -17,18 +17,18 @@
 
 package org.apache.rocketmq.spring.annotation;
 
-import org.apache.rocketmq.spring.config.RocketMQConfigUtils;
-import org.springframework.stereotype.Component;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.concurrent.TimeUnit;
+import org.springframework.stereotype.Component;
 
 /**
  * This annotation is used over a class which implements interface
- * org.apache.rocketmq.client.producer.TransactionListener. The class implements
+ * org.apache.rocketmq.spring.core.RocketMQLocalTransactionListener, which will be converted to
+ * org.apache.rocketmq.client.producer.TransactionListener later. The class implements
  * two methods for process callback events after the txProducer sends a transactional message.
  * <p>Note: The annotation is used only on RocketMQ client producer side, it can not be used
  * on consumer side.
@@ -38,14 +38,6 @@ import java.lang.annotation.Target;
 @Documented
 @Component
 public @interface RocketMQTransactionListener {
-
-    /**
-     * Declare the txProducerGroup that is used to relate callback event to the listener, rocketMQTemplate must send a
-     * transactional message with the declared txProducerGroup.
-     * <p>
-     * <p>It is suggested to use the default txProducerGroup if your system only needs to define a TransactionListener class.
-     */
-    String txProducerGroup() default RocketMQConfigUtils.ROCKETMQ_TRANSACTION_DEFAULT_GLOBAL_NAME;
 
     /**
      * Set ExecutorService params -- corePoolSize
@@ -60,10 +52,22 @@ public @interface RocketMQTransactionListener {
     /**
      * Set ExecutorService params -- keepAliveTime
      */
-    long keepAliveTime() default 1000 * 60; //60ms
+    long keepAliveTime() default 1000 * 60;
+
+    /**
+     * Set ExecutorService params -- keepAliveTimeUnit
+     */
+    TimeUnit keepAliveTimeUnit() default TimeUnit.MILLISECONDS;
 
     /**
      * Set ExecutorService params -- blockingQueueSize
      */
     int blockingQueueSize() default 2000;
+
+    /**
+     * Set rocketMQTemplate bean name, the default is rocketMQTemplate.
+     * if use ExtRocketMQTemplate, can set ExtRocketMQTemplate bean name.
+     */
+    String rocketMQTemplateBeanName() default "rocketMQTemplate";
+
 }

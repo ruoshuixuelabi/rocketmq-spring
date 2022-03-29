@@ -31,6 +31,6 @@ public class OrderPaidEventConsumer implements RocketMQListener<OrderPaidEvent> 
 
     @Override
     public void onMessage(OrderPaidEvent orderPaidEvent) {
-        System.out.printf("------- OrderPaidEventConsumer received: %s \n", orderPaidEvent);
+        System.out.printf("------- OrderPaidEventConsumer received: %s [orderId : %s]\n", orderPaidEvent,orderPaidEvent.getOrderId());
     }
 }
