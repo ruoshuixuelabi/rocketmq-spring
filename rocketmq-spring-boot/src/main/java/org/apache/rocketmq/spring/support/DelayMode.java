@@ -15,25 +15,10 @@
  * limitations under the License.
  */
 
-package org.apache.rocketmq.samples.springboot;
+package org.apache.rocketmq.spring.support;
 
-import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
-import org.apache.rocketmq.spring.core.RocketMQListener;
-import org.springframework.stereotype.Service;
-
-/**
- * RocketMQMessageListener
- */
-@Service
-@RocketMQMessageListener(
-    topic = "normal_topic_define_in_cloud_MQ",
-    consumerGroup = "group_define_in_cloud_MQ"
-    //accessKey = "AK" // It will read by `rocketmq.consumer.access-key` key
-    //secretKey = "SK" // It will read by `rocketmq.consumer.secret-key` key
-    )
-public class ACLStringConsumer implements RocketMQListener<String> {
-    @Override
-    public void onMessage(String message) {
-        System.out.printf("------- ACL StringConsumer received: %s \n", message);
-    }
+public enum DelayMode {
+    DELAY_SECONDS,
+    DELAY_MILLISECONDS,
+    DELIVER_TIME_MILLISECONDS,
 }
