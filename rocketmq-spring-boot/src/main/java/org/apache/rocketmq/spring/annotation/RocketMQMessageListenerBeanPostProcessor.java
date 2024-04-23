@@ -16,13 +16,14 @@
  */
 package org.apache.rocketmq.spring.annotation;
 
-import org.apache.rocketmq.spring.autoconfigure.ListenerContainerConfiguration;
+import org.apache.rocketmq.spring.support.RocketMQMessageListenerContainerRegistrar;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.core.OrderComparator;
 import org.springframework.core.annotation.AnnotationUtils;
 
@@ -32,13 +33,15 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-public class RocketMQMessageListenerBeanPostProcessor implements ApplicationContextAware, BeanPostProcessor, InitializingBean {
+public class RocketMQMessageListenerBeanPostProcessor implements ApplicationContextAware, BeanPostProcessor, InitializingBean, SmartLifecycle {
 
     private ApplicationContext applicationContext;
 
     private AnnotationEnhancer enhancer;
 
-    private ListenerContainerConfiguration listenerContainerConfiguration;
+    private RocketMQMessageListenerContainerRegistrar listenerContainerRegistrar;
+
+    private boolean running = false;
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
@@ -51,11 +54,39 @@ public class RocketMQMessageListenerBeanPostProcessor implements ApplicationCont
         RocketMQMessageListener ann = targetClass.getAnnotation(RocketMQMessageListener.class);
         if (ann != null) {
             RocketMQMessageListener enhance = enhance(targetClass, ann);
-            if (listenerContainerConfiguration != null) {
-                listenerContainerConfiguration.registerContainer(beanName, bean, enhance);
+            if (listenerContainerRegistrar != null) {
+                listenerContainerRegistrar.registerContainer(beanName, bean, enhance);
             }
         }
         return bean;
+    }
+
+    @Override
+    public int getPhase() {
+        return Integer.MAX_VALUE - 2000;
+    }
+
+    @Override
+    public void start() {
+        if (!isRunning()) {
+            this.setRunning(true);
+            listenerContainerRegistrar.startContainer();
+        }
+    }
+
+    @Override
+    public void stop() {
+
+    }
+
+    public void setRunning(boolean running) {
+        this.running = running;
+    }
+
+
+    @Override
+    public boolean isRunning() {
+        return running;
     }
 
     @Override
@@ -66,7 +97,7 @@ public class RocketMQMessageListenerBeanPostProcessor implements ApplicationCont
     @Override
     public void afterPropertiesSet() throws Exception {
         buildEnhancer();
-        this.listenerContainerConfiguration = this.applicationContext.getBean(ListenerContainerConfiguration.class);
+        this.listenerContainerRegistrar = this.applicationContext.getBean(RocketMQMessageListenerContainerRegistrar.class);
     }
 
     private void buildEnhancer() {
