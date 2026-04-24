@@ -30,12 +30,10 @@ import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.SmartInitializingSingleton;
-import org.springframework.beans.factory.support.BeanDefinitionValidationException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.StringUtils;
 
@@ -87,14 +85,13 @@ public class ExtTemplateResetConfiguration implements ApplicationContextAware, S
         }
 
         ExtProducerResetConfiguration annotation = clazz.getAnnotation(ExtProducerResetConfiguration.class);
-        GenericApplicationContext genericApplicationContext = (GenericApplicationContext) applicationContext;
-        validate(annotation, genericApplicationContext);
 
         ProducerBuilder producerBuilder = createProducer(annotation);
         RocketMQClientTemplate rocketMQTemplate = (RocketMQClientTemplate) bean;
         rocketMQTemplate.setProducerBuilder(producerBuilder);
         rocketMQTemplate.setMessageConverter(rocketMQMessageConverter.getMessageConverter());
-        log.info("Set real producerBuilder to :{} {}", beanName, annotation.value());
+        String topic = environment.resolvePlaceholders(annotation.topic());
+        log.info("Set real producer to {} using topic {}", beanName, topic);
     }
 
     private ProducerBuilder createProducer(ExtProducerResetConfiguration annotation) {
@@ -110,23 +107,19 @@ public class ExtTemplateResetConfiguration implements ApplicationContextAware, S
         accessKey = StringUtils.hasLength(accessKey) ? accessKey : producerConfig.getAccessKey();
         String secretKey = environment.resolvePlaceholders(annotation.secretKey());
         secretKey = StringUtils.hasLength(secretKey) ? secretKey : producerConfig.getSecretKey();
+        String namespace = environment.resolvePlaceholders(annotation.namespace());
+        namespace = StringUtils.hasLength(namespace) ? namespace : producerConfig.getNamespace();
         int requestTimeout = annotation.requestTimeout();
         Boolean sslEnabled = producerConfig.isSslEnabled();
-        ClientConfiguration clientConfiguration = RocketMQUtil.createClientConfiguration(accessKey, secretKey, endpoints, Duration.ofSeconds(requestTimeout), sslEnabled);
+        ClientConfiguration clientConfiguration = RocketMQUtil.createClientConfiguration(accessKey, secretKey,
+            endpoints, Duration.ofSeconds(requestTimeout), sslEnabled, namespace);
         final ClientServiceProvider provider = ClientServiceProvider.loadService();
         ProducerBuilder producerBuilder = provider.newProducerBuilder()
-                .setClientConfiguration(clientConfiguration).setMaxAttempts(annotation.maxAttempts())
-                .setTopics(topic);
-        return producerBuilder;
-    }
-
-    private void validate(ExtProducerResetConfiguration annotation,
-                          GenericApplicationContext genericApplicationContext) {
-        if (genericApplicationContext.isBeanNameInUse(annotation.value())) {
-            throw new BeanDefinitionValidationException(String.format("Bean {} has been used in Spring Application Context, " +
-                            "please check the @ExtTemplateConfiguration",
-                    annotation.value()));
+                .setClientConfiguration(clientConfiguration).setMaxAttempts(annotation.maxAttempts());
+        if (StringUtils.hasLength(topic)) {
+            producerBuilder.setTopics(topic.split(RocketMQAutoConfiguration.COMMA));
         }
+        return producerBuilder;
     }
 
 }

@@ -42,10 +42,12 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 
 @Configuration
@@ -59,6 +61,7 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
     public static final String ROCKETMQ_TEMPLATE_DEFAULT_GLOBAL_NAME = "rocketMQClientTemplate";
     public static final String PRODUCER_BUILDER_BEAN_NAME = "producerBuilder";
     public static final String SIMPLE_CONSUMER_BUILDER_BEAN_NAME = "simpleConsumerBuilder";
+    public static final String COMMA = ",";
     private ApplicationContext applicationContext;
 
     @Override
@@ -87,7 +90,7 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
         if (StringUtils.hasLength(topic)) {
             // Set the topic name(s), which is optional but recommended. It makes producer could prefetch the topic
             // route before message publishing.
-            producerBuilder.setTopics(rocketMQProducer.getTopic());
+            producerBuilder.setTopics(rocketMQProducer.getTopic().split(COMMA));
         }
         log.info(String.format("a producer init on proxy %s", endPoints));
         return producerBuilder;
@@ -104,7 +107,6 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
         RocketMQProperties.SimpleConsumer simpleConsumer = rocketMQProperties.getSimpleConsumer();
         final ClientServiceProvider provider = ClientServiceProvider.loadService();
         String consumerGroup = simpleConsumer.getConsumerGroup();
-        FilterExpression filterExpression = RocketMQUtil.createFilterExpression(simpleConsumer.getTag(), simpleConsumer.getFilterExpressionType());
         ClientConfiguration clientConfiguration = RocketMQUtil.createConsumerClientConfiguration(simpleConsumer);
         SimpleConsumerBuilder simpleConsumerBuilder = provider.newSimpleConsumerBuilder()
                 .setClientConfiguration(clientConfiguration);
@@ -115,9 +117,16 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
         if (StringUtils.hasLength(consumerGroup)) {
             simpleConsumerBuilder.setConsumerGroup(consumerGroup);
         }
+
         // Set the subscription for the consumer.
-        if (Objects.nonNull(filterExpression)) {
-            simpleConsumerBuilder.setSubscriptionExpressions(Collections.singletonMap(simpleConsumer.getTopic(), filterExpression));
+        if (CollectionUtils.isEmpty(simpleConsumer.getSubscriptionExpressions())) {
+            FilterExpression filterExpression = RocketMQUtil.createFilterExpression(simpleConsumer.getTag(), simpleConsumer.getFilterExpressionType());
+            if (Objects.nonNull(filterExpression)) {
+                simpleConsumerBuilder.setSubscriptionExpressions(Collections.singletonMap(simpleConsumer.getTopic(), filterExpression));
+            }
+        } else {
+            Map<String, FilterExpression> subscriptionExpressions = RocketMQUtil.createSubscriptionExpressions(simpleConsumer.getSubscriptionExpressions());
+            simpleConsumerBuilder.setSubscriptionExpressions(subscriptionExpressions);
         }
         return simpleConsumerBuilder;
     }

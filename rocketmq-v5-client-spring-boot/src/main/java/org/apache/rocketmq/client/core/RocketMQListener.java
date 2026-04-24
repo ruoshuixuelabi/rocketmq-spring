@@ -21,5 +21,6 @@ import org.apache.rocketmq.client.apis.consumer.MessageListener;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
 public interface RocketMQListener extends MessageListener {
+    @Override
     ConsumeResult consume(MessageView messageView);
 }

@@ -24,6 +24,7 @@ import org.apache.rocketmq.client.apis.consumer.PushConsumer;
 import org.apache.rocketmq.client.apis.consumer.PushConsumerBuilder;
 import org.apache.rocketmq.client.apis.consumer.FilterExpression;
 import org.apache.rocketmq.client.core.RocketMQListener;
+import org.apache.rocketmq.client.core.RocketMQPushConsumerLifecycleListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -86,6 +87,8 @@ public class DefaultListenerContainer implements InitializingBean,
     int consumptionThreadCount = 20;
 
     Boolean sslEnabled;
+
+    String namespace;
 
     public String getName() {
         return name;
@@ -240,20 +243,28 @@ public class DefaultListenerContainer implements InitializingBean,
         this.sslEnabled = sslEnabled;
     }
 
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
     private void initRocketMQPushConsumer() {
-        if (rocketMQMessageListener == null) {
-            throw new IllegalArgumentException("Property 'rocketMQMessageListener' is required");
+        if (rocketMQListener == null) {
+            throw new IllegalArgumentException("Property 'rocketMQListener' is required");
         }
-        Assert.notNull(consumerGroup, "Property 'consumerGroup' is required");
-        Assert.notNull(topic, "Property 'topic' is required");
-        Assert.notNull(tag, "Property 'tag' is required");
+        Assert.hasText(consumerGroup, "Property 'consumerGroup' is required");
+        Assert.hasText(topic, "Property 'topic' is required");
+        Assert.hasText(tag, "Property 'tag' is required");
         FilterExpression filterExpression = null;
         final ClientServiceProvider provider = ClientServiceProvider.loadService();
         if (StringUtils.hasLength(this.getTag())) {
             filterExpression = RocketMQUtil.createFilterExpression(this.getTag(),this.getType());
         }
         ClientConfiguration clientConfiguration = RocketMQUtil.createClientConfiguration(this.getAccessKey(), this.getSecretKey(),
-                this.getEndpoints(), this.getRequestTimeout(), this.sslEnabled);
+                this.getEndpoints(), this.getRequestTimeout(), this.sslEnabled, this.namespace);
 
         PushConsumerBuilder pushConsumerBuilder = provider.newPushConsumerBuilder()
                 .setClientConfiguration(clientConfiguration);
@@ -270,6 +281,9 @@ public class DefaultListenerContainer implements InitializingBean,
                 .setMaxCacheMessageSizeInBytes(this.getMaxCacheMessageSizeInBytes())
                 .setMaxCacheMessageCount(this.getMaxCachedMessageCount())
                 .setMessageListener(rocketMQListener);
+        if (rocketMQListener instanceof RocketMQPushConsumerLifecycleListener) {
+            ((RocketMQPushConsumerLifecycleListener) rocketMQListener).prepareStart(pushConsumerBuilder);
+        }
         this.setPushConsumerBuilder(pushConsumerBuilder);
     }
 
@@ -342,8 +356,6 @@ public class DefaultListenerContainer implements InitializingBean,
         return "DefaultListenerContainer{" +
                 "name='" + name + '\'' +
                 ", running=" + running +
-                ", accessKey='" + accessKey + '\'' +
-                ", secretKey='" + secretKey + '\'' +
                 ", endpoints='" + endpoints + '\'' +
                 ", consumerGroup='" + consumerGroup + '\'' +
                 ", tag='" + tag + '\'' +
@@ -354,6 +366,7 @@ public class DefaultListenerContainer implements InitializingBean,
                 ", maxCachedMessageCount=" + maxCachedMessageCount +
                 ", maxCacheMessageSizeInBytes=" + maxCacheMessageSizeInBytes +
                 ", consumptionThreadCount=" + consumptionThreadCount +
+                ", namespace='" + namespace + '\'' +
                 '}';
     }
 }

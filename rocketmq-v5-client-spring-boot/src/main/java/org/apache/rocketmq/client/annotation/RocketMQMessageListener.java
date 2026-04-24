@@ -30,8 +30,8 @@ public @interface RocketMQMessageListener {
     String ACCESS_KEY_PLACEHOLDER = "${rocketmq.push-consumer.access-key:}";
     String SECRET_KEY_PLACEHOLDER = "${rocketmq.push-consumer.secret-key:}";
     String ENDPOINTS_PLACEHOLDER = "${rocketmq.push-consumer.endpoints:}";
-    String TOPIC_PLACEHOLDER = "${rocketmq.push-consumer.endpoints:}";
-    String TAG_PLACEHOLDER = "${rocketmq.push-consumer.tag:}";
+    String TOPIC_PLACEHOLDER = "${rocketmq.push-consumer.topic:}";
+    String TAG_PLACEHOLDER = "${rocketmq.push-consumer.tag:*}";
 
     /**
      * The property of "access-key".
@@ -59,6 +59,11 @@ public @interface RocketMQMessageListener {
     String tag() default TAG_PLACEHOLDER;
 
     /**
+     * Enable or disable the use of Secure Sockets Layer (SSL) for network transport.
+     */
+    boolean sslEnabled() default true;
+
+    /**
      * The type of filter expression
      */
     String filterExpressionType() default "tag";
@@ -82,5 +87,8 @@ public @interface RocketMQMessageListener {
 
     int consumptionThreadCount() default 20;
 
-
+    /**
+     * The namespace of listener.
+     */
+    String namespace() default "";
 }

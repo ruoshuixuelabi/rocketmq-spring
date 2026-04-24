@@ -18,6 +18,8 @@ package org.apache.rocketmq.client.autoconfigure;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.Map;
+
 @SuppressWarnings("WeakerAccess")
 @ConfigurationProperties(prefix = "rocketmq")
 public class RocketMQProperties {
@@ -79,6 +81,8 @@ public class RocketMQProperties {
          */
         private int maxAttempts = 3;
 
+        private String namespace;
+
         public String getAccessKey() {
             return accessKey;
         }
@@ -135,15 +139,22 @@ public class RocketMQProperties {
             this.maxAttempts = maxAttempts;
         }
 
+        public String getNamespace() {
+            return namespace;
+        }
+
+        public void setNamespace(String namespace) {
+            this.namespace = namespace;
+        }
+
         @Override
         public String toString() {
             return "Producer{" +
-                    "accessKey='" + accessKey + '\'' +
-                    ", secretKey='" + secretKey + '\'' +
-                    ", endpoints='" + endpoints + '\'' +
+                    "endpoints='" + endpoints + '\'' +
                     ", topic='" + topic + '\'' +
                     ", requestTimeout=" + requestTimeout +
                     ", sslEnabled=" + sslEnabled +
+                    ", namespace='" + namespace + '\'' +
                     '}';
         }
     }
@@ -173,12 +184,12 @@ public class RocketMQProperties {
         /**
          * The max await time when receive messages from the server.
          */
-        private int awaitDuration = 0;
+        private int awaitDuration = 5;
 
         /**
          * Tag of consumer.
          */
-        private String tag;
+        private String tag = "*";
 
         /**
          * Topic name of consumer.
@@ -199,6 +210,13 @@ public class RocketMQProperties {
          * Enable or disable the use of Secure Sockets Layer (SSL) for network transport.
          */
         private boolean sslEnabled = true;
+
+        private String namespace = "";
+
+        /**
+         * key is topic
+         */
+        private Map<String, FilterExpression> subscriptionExpressions;
 
         public String getAccessKey() {
             return accessKey;
@@ -280,12 +298,26 @@ public class RocketMQProperties {
             this.filterExpressionType = filterExpressionType;
         }
 
+        public String getNamespace() {
+            return namespace;
+        }
+
+        public void setNamespace(String namespace) {
+            this.namespace = namespace;
+        }
+
+        public Map<String, FilterExpression> getSubscriptionExpressions() {
+            return subscriptionExpressions;
+        }
+
+        public void setSubscriptionExpressions(Map<String, FilterExpression> subscriptionExpressions) {
+            this.subscriptionExpressions = subscriptionExpressions;
+        }
+
         @Override
         public String toString() {
             return "SimpleConsumer{" +
-                    "accessKey='" + accessKey + '\'' +
-                    ", secretKey='" + secretKey + '\'' +
-                    ", endpoints='" + endpoints + '\'' +
+                    "endpoints='" + endpoints + '\'' +
                     ", consumerGroup='" + consumerGroup + '\'' +
                     ", awaitDuration='" + awaitDuration + '\'' +
                     ", tag='" + tag + '\'' +
@@ -293,8 +325,30 @@ public class RocketMQProperties {
                     ", requestTimeout=" + requestTimeout +
                     ", filterExpressionType='" + filterExpressionType + '\'' +
                     ", sslEnabled=" + sslEnabled +
+                    ", namespace='" + namespace + '\'' +
                     '}';
         }
     }
 
+    public static class FilterExpression {
+        private String tag;
+
+        private String filterExpressionType;
+
+        public String getTag() {
+            return tag;
+        }
+
+        public void setTag(String tag) {
+            this.tag = tag;
+        }
+
+        public String getFilterExpressionType() {
+            return filterExpressionType;
+        }
+
+        public void setFilterExpressionType(String filterExpressionType) {
+            this.filterExpressionType = filterExpressionType;
+        }
+    }
 }

@@ -34,11 +34,15 @@ import org.springframework.util.StringUtils;
 
 import java.nio.charset.Charset;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class RocketMQUtil {
 
     private static final Logger log = LoggerFactory.getLogger(RocketMQUtil.class);
+
+    private static final ClientServiceProvider PROVIDER = ClientServiceProvider.loadService();
 
     public static org.apache.rocketmq.client.apis.message.Message convertToClientMessage(
             MessageConverter messageConverter, String charset,
@@ -62,7 +66,7 @@ public class RocketMQUtil {
             return null;
         }
         String[] tempArr = destination.split(":", 2);
-        final ClientServiceProvider provider = ClientServiceProvider.loadService();
+
         org.apache.rocketmq.client.apis.message.MessageBuilder messageBuilder = null;
         // resolve header
         if (Objects.nonNull(headers) && !headers.isEmpty()) {
@@ -70,7 +74,7 @@ public class RocketMQUtil {
             if (ObjectUtils.isEmpty(keys)) {
                 keys = headers.get(toRocketHeaderKey(RocketMQHeaders.KEYS));
             }
-            messageBuilder = provider.newMessageBuilder()
+            messageBuilder = PROVIDER.newMessageBuilder()
                     .setTopic(tempArr[0]);
             if (tempArr.length > 1) {
                 messageBuilder.setTag(tempArr[1]);
@@ -86,7 +90,14 @@ public class RocketMQUtil {
             }
             messageBuilder.setBody(payloads);
             org.apache.rocketmq.client.apis.message.MessageBuilder builder = messageBuilder;
-            headers.forEach((key, value) -> builder.addProperty(key, String.valueOf(value)));
+            headers.forEach((key, value) ->
+                {
+                    if (!RocketMQHeaders.SYSTEM_PROPERTY_SET.contains(key)) {
+                        builder.addProperty(key, String.valueOf(value));
+                    }
+                }
+
+            );
         }
         return messageBuilder.build();
     }
@@ -122,7 +133,8 @@ public class RocketMQUtil {
         String endPoints = rocketMQProducer.getEndpoints();
         Duration requestTimeout = Duration.ofSeconds(rocketMQProducer.getRequestTimeout());
         boolean sslEnabled = rocketMQProducer.isSslEnabled();
-        return createClientConfiguration(accessKey, secretKey, endPoints, requestTimeout, sslEnabled);
+        String namespace = rocketMQProducer.getNamespace();
+        return createClientConfiguration(accessKey, secretKey, endPoints, requestTimeout, sslEnabled, namespace);
     }
 
     public static ClientConfiguration createConsumerClientConfiguration(RocketMQProperties.SimpleConsumer simpleConsumer) {
@@ -131,12 +143,13 @@ public class RocketMQUtil {
         String endPoints = simpleConsumer.getEndpoints();
         Duration requestTimeout = Duration.ofSeconds(simpleConsumer.getRequestTimeout());
         boolean sslEnabled = simpleConsumer.isSslEnabled();
-        return createClientConfiguration(accessKey, secretKey, endPoints, requestTimeout, sslEnabled);
+        String namespace = simpleConsumer.getNamespace();
+        return createClientConfiguration(accessKey, secretKey, endPoints, requestTimeout, sslEnabled, namespace);
 
     }
 
     public static ClientConfiguration createClientConfiguration(String accessKey, String secretKey, String endPoints,
-                                                                Duration requestTimeout, Boolean sslEnabled) {
+                                                                Duration requestTimeout, Boolean sslEnabled, String namespace) {
 
         SessionCredentialsProvider sessionCredentialsProvider = null;
         if (StringUtils.hasLength(accessKey) && StringUtils.hasLength(secretKey)) {
@@ -154,6 +167,9 @@ public class RocketMQUtil {
         if (Objects.nonNull(sslEnabled)) {
             clientConfigurationBuilder.enableSsl(sslEnabled);
         }
+        if (StringUtils.hasLength(namespace)) {
+            clientConfigurationBuilder.setNamespace(namespace);
+        }
         return clientConfigurationBuilder.build();
     }
 
@@ -169,5 +185,15 @@ public class RocketMQUtil {
         FilterExpressionType filterExpressionType = "tag".equalsIgnoreCase(type) ? FilterExpressionType.TAG : FilterExpressionType.SQL92;
         FilterExpression filterExpression = new FilterExpression(tag, filterExpressionType);
         return filterExpression;
+    }
+
+    public static Map<String, FilterExpression> createSubscriptionExpressions(Map<String, RocketMQProperties.FilterExpression> map) {
+        Map<String, FilterExpression> subscriptionExpressions = new HashMap<>();
+        map.forEach((topic, expression) -> {
+            FilterExpressionType filterExpressionType = "tag".equalsIgnoreCase(expression.getFilterExpressionType()) ? FilterExpressionType.TAG : FilterExpressionType.SQL92;
+            FilterExpression filterExpression = new FilterExpression(expression.getTag(), filterExpressionType);
+            subscriptionExpressions.put(topic, filterExpression);
+        });
+        return subscriptionExpressions;
     }
 }

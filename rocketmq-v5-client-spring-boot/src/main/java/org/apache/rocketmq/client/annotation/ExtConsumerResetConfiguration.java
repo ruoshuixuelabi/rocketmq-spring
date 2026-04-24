@@ -31,11 +31,11 @@ public @interface ExtConsumerResetConfiguration {
 
     String ACCESS_KEY_PLACEHOLDER = "${rocketmq.simple-consumer.accessKey:}";
     String SECRET_KEY_PLACEHOLDER = "${rocketmq.simple-consumer.secretKey:}";
-    String TAG_PLACEHOLDER = "${rocketmq.simple-consumer.tag:}";
+    String TAG_PLACEHOLDER = "${rocketmq.simple-consumer.tag:*}";
     String TOPIC_PLACEHOLDER = "${rocketmq.simple-consumer.topic:}";
     String ENDPOINTS_PLACEHOLDER = "${rocketmq.simple-consumer.endpoints:}";
     String CONSUMER_GROUP_PLACEHOLDER = "${rocketmq.simple-consumer.consumerGroup:}";
-    String FILTER_EXPRESSION_TYPE_PLACEHOLDER = "${rocketmq.simple-consumer.filterExpressionType:}";
+    String FILTER_EXPRESSION_TYPE_PLACEHOLDER = "${rocketmq.simple-consumer.filterExpressionType:tag}";
 
     /**
      * The component name of the Consumer configuration.
@@ -85,6 +85,34 @@ public @interface ExtConsumerResetConfiguration {
     /**
      * The max await time when receive messages from the server.
      */
-    int awaitDuration() default 0;
+    int awaitDuration() default 5;
 
+    /**
+     * The namespace of consumer.
+     */
+    String namespace() default "";
+
+    /**
+     * subscribing to multiple topics
+     */
+    FilterExpression[] subscriptionExpressions() default {};
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({})
+    @interface FilterExpression {
+        /**
+         * Topic name of consumer.
+         */
+        String topic();
+
+        /**
+         * Tag of consumer.
+         */
+        String tag() default "*";
+
+        /**
+         * The type of filter expression
+         */
+        String filterExpressionType() default "tag";
+    }
 }
